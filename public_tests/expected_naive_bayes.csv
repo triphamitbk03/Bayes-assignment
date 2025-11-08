@@ -1,0 +1,7 @@
+test_name,expected_value,tolerance,description
+test_gaussian_viral_mean_duration,2.566667,0.010000,Viral class mean for Duration
+test_gaussian_log_prob_viral,-2.058631,0.010000,Log P(Viral | sample)
+test_gaussian_log_prob_bacterial,-67.477355,0.010000,Log P(Bacterial | sample)
+test_categorical_prior_edible,0.500000,0.010000,Prior P(Edible)
+test_categorical_log_prob_edible,-2.173752,0.010000,Log P(Edible | sample)
+test_categorical_log_prob_poisonous,-8.881836,0.010000,Log P(Poisonous | sample)

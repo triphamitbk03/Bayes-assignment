@@ -1,0 +1,6 @@
+test_name,expected_value,tolerance,description
+test_marginal_c,0.580000,0.001000,P(C=True) - marginal
+test_marginal_d,0.573400,0.001000,P(D=True) - marginal
+test_causal_c_given_a,0.860000,0.001000,P(C=True | A=True) - causal
+test_diagnostic_a_given_c,0.741379,0.001000,P(A=True | C=True) - diagnostic
+test_explaining_away,0.612903,0.001000,"P(A=True | C=True, B=True) - explaining away"

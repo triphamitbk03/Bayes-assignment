@@ -1,0 +1,48 @@
+{
+  "description": "Converging structure with causal chain: A→C←B, C→D",
+  "scenario": "Medical diagnosis example: A=Flu, B=COVID, C=Fever, D=Fatigue",
+  "structure": {
+    "nodes": ["A", "B", "C", "D"],
+    "edges": [
+      ["A", "C"],
+      ["B", "C"],
+      ["C", "D"]
+    ],
+    "order": ["A", "B", "C", "D"]
+  },
+  "cpt": {
+    "A": {
+      "parents": [],
+      "probabilities": {
+        "()": 0.5
+      },
+      "description": "Prior probability of A (e.g., P(Flu))"
+    },
+    "B": {
+      "parents": [],
+      "probabilities": {
+        "()": 0.4
+      },
+      "description": "Prior probability of B (e.g., P(COVID))"
+    },
+    "C": {
+      "parents": ["A", "B"],
+      "probabilities": {
+        "(True, True)": 0.95,
+        "(True, False)": 0.8,
+        "(False, True)": 0.6,
+        "(False, False)": 0.1
+      },
+      "description": "C depends on both A and B (e.g., P(Fever | Flu, COVID))"
+    },
+    "D": {
+      "parents": ["C"],
+      "probabilities": {
+        "(True,)": 0.88,
+        "(False,)": 0.15
+      },
+      "description": "D depends on C (e.g., P(Fatigue | Fever))"
+    }
+  }
+}
+

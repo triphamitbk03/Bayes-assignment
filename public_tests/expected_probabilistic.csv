@@ -1,0 +1,5 @@
+test_name,expected_value,tolerance,description
+test_marginal_probability,0.500000,0.001000,P(Ailment=Flu)
+test_joint_probability,0.400000,0.001000,P(Fever=Yes AND Cough=Yes)
+test_conditional_probability,0.722222,0.001000,P(TestPositive=Positive | Fever=Yes)
+test_bayes_posterior,0.857143,0.001000,P(Ailment=Flu | TestPositive=Positive)
