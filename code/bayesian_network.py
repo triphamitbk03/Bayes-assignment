@@ -32,7 +32,16 @@ class BayesianNetwork:
         # Hint 2: If no parents, key = "()", else build tuple from evidence
         # Hint 3: Look up p_true = node_cpt["probabilities"][key]
         # Hint 4: Return p_true if value else (1.0 - p_true)
-        raise NotImplementedError("TODO: Implement get_probability")
+        #raise NotImplementedError("TODO: Implement get_probability")
+        node_cpt = self.cpt[node]
+        parents = node_cpt["parents"]
+        if not parents:
+            key = "()"
+        else:
+            parent_values = tuple(evidence[parent] for parent in parents)
+            key = str(parent_values)
+        p_true = node_cpt["probabilities"][key]
+        return p_true if value else (1.0 - p_true)
 
     def enumerate_all(self, variables: List[str], evidence: Dict[str, bool]) -> float:
         """Recursive enumeration algorithm for computing joint probability."""
@@ -48,7 +57,24 @@ class BayesianNetwork:
         #             prob = self.get_probability(first, value, extended)
         #             total += prob * self.enumerate_all(rest, extended)
         #           return total
-        raise NotImplementedError("TODO: Implement enumerate_all")
+        #raise NotImplementedError("TODO: Implement enumerate_all")
+        if not variables:
+            return 1.0
+        
+        y = variables[0]
+        rest = variables[1:]
+
+        if y in evidence:
+            prob = self.get_probability(y, evidence[y], evidence)
+            return prob * self.enumerate_all(rest, evidence)
+        else:
+            total = 0.0
+            for value in [True, False]:
+                new_evidence = evidence.copy()
+                new_evidence[y] = value
+                prob = self.get_probability(y, value, new_evidence)
+                total += prob * self.enumerate_all(rest, new_evidence)
+            return total
 
     def query(self, variable: str, evidence: Dict[str, bool] = None) -> Dict[bool, float]:
         """Compute conditional probability P(variable | evidence) via exact enumeration."""
@@ -60,8 +86,22 @@ class BayesianNetwork:
         # Hint 3: Normalize: total = dist[True] + dist[False]
         #         Check if total == 0 (raise ValueError)
         #         Return {value: dist[value] / total for value in dist}
-        raise NotImplementedError("TODO: Implement query")
-
+        #raise NotImplementedError("TODO: Implement query")
+        dist = {}
+        if evidence is None:
+            evidence = {}
+        for value in [True, False]:
+            extended = evidence.copy()
+            extended[variable] = value
+            dist[value] = self.enumerate_all(self.order, extended)
+        total = dist[True] + dist[False]
+        if total == 0:
+            raise ValueError("Total probability is zero.")
+        
+        for val in dist:
+            dist[val] /= total
+            
+        return dist
 
 def load_network() -> BayesianNetwork:
     """Load the pre-defined Bayesian network from JSON."""

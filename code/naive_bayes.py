@@ -33,7 +33,23 @@ class GaussianNaiveBayes:
           - Prior probability
         Store the results in self.classes_ and keep track of feature columns.
         """
-        raise NotImplementedError("Implement GaussianNaiveBayes.fit.")
+        #raise NotImplementedError("Implement GaussianNaiveBayes.fit.")
+        self.features_ = list(feature_cols)
+        classes = df[label_col].unique()
+
+        # Calculate stats for each class
+        for c in classes:
+            subset = df[df[label_col] == c]
+
+            # Calculate mean and variance for each feature
+            mean = subset[self.features_].mean().to_dict()
+            variance = (subset[self.features_].var(ddof=0) + self.epsilon).to_dict()
+            #prior:
+            prior = len(subset) / len(df)
+            # Store in classes_
+            self.classes_[c] = GaussianClassStats(mean=mean, variance=variance, prior=prior)
+
+
 
     def _log_gaussian(self, x: float, mean: float, variance: float) -> float:
         """Utility to compute log N(x | mean, variance)."""
@@ -45,12 +61,27 @@ class GaussianNaiveBayes:
 
         TODO: Sum the log prior with the log-likelihood contribution from every feature.
         """
-        raise NotImplementedError("Implement GaussianNaiveBayes.predict_log_proba.")
+        #raise NotImplementedError("Implement GaussianNaiveBayes.predict_log_proba.")
+        log_probs = {}
+        for c, stats in self.classes_.items():
+            # Start with log prior
+            log_prob = math.log(stats.prior)
+
+            #log-likelihood from each feature
+            for feature in self.features_:
+                x = sample[feature]
+                mean = stats.mean[feature]
+                variance = stats.variance[feature]
+                log_prob += self._log_gaussian(x, mean, variance)
+            
+            log_probs[c] = log_prob
+        return log_probs
 
     def predict(self, sample: Dict[str, float]) -> str:
         """Return the most probable class label."""
         # TODO: Use predict_log_proba to determine the most likely class label.
-        raise NotImplementedError("Implement GaussianNaiveBayes.predict.")
+        log_probs = self.predict_log_proba(sample)
+        return max(log_probs, key=log_probs.get)
 
 
 class CategoricalNaiveBayes:
@@ -64,27 +95,70 @@ class CategoricalNaiveBayes:
     def fit(self, df: pd.DataFrame, feature_cols: Iterable[str], label_col: str) -> None:
         """
         Estimate class priors and smoothed frequency tables.
-
-        TODO:
-          - Track the unique values for each feature
-          - Count occurrences of each value per class
-          - Store class counts for smoothing
         """
-        raise NotImplementedError("Implement CategoricalNaiveBayes.fit.")
+        # Lưu các giá trị có thể của từng feature (ví dụ {"Fever": ["Yes","No"], ...})
+        for f in feature_cols:
+            self.feature_values_[f] = sorted(df[f].unique())
+
+        # Các lớp (class labels)
+        classes = df[label_col].unique()
+
+        for cls in classes:
+            # Subset theo từng class
+            subset = df[df[label_col] == cls]
+
+            # Lưu số lượng mẫu của class này
+            self.class_totals_[cls] = len(subset)
+
+            # Tính prior P(y)
+            self.class_priors_[cls] = len(subset) / len(df)
+
+            # Khởi tạo dict đếm
+            self.conditional_counts_[cls] = {}
+
+            # Với mỗi feature: đếm tần suất từng giá trị
+            for f in feature_cols:
+                counts = subset[f].value_counts().to_dict()  # đếm từng giá trị
+                self.conditional_counts_[cls][f] = counts
+
+        
 
     def predict_log_proba(self, sample: Dict[str, str]) -> Dict[str, float]:
         """
         Return the log-probability for each class given a categorical sample.
-
-        TODO: Apply Laplace smoothing with parameter alpha when computing
-        conditional probabilities.
+        Apply Laplace smoothing with parameter alpha.
         """
-        raise NotImplementedError("Implement CategoricalNaiveBayes.predict_log_proba.")
+        log_probs = {}
+
+        for cls in self.class_priors_:
+            # log P(y)
+            logp = math.log(self.class_priors_[cls])
+
+            # Với từng feature: cộng log P(x_i|y)
+            for f, value in sample.items():
+                # Các giá trị có thể có của feature này
+                V = len(self.feature_values_[f])
+                N_y = self.class_totals_[cls]
+
+                # Số lần feature = value trong class y
+                counts = self.conditional_counts_[cls][f]
+                count_val = counts.get(value, 0)
+
+                # Áp dụng smoothing
+                prob = (count_val + self.alpha) / (N_y + self.alpha * V)
+
+                logp += math.log(prob)
+
+            log_probs[cls] = logp
+
+        return log_probs
+
 
     def predict(self, sample: Dict[str, str]) -> str:
         """Return the most probable class label."""
         # TODO: Use predict_log_proba to determine the most likely class label.
-        raise NotImplementedError("Implement CategoricalNaiveBayes.predict.")
+        log_probs = self.predict_log_proba(sample)
+        return max(log_probs, key=log_probs.get)
 
 
 def gaussian_demo() -> pd.DataFrame:
